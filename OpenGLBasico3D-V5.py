@@ -40,7 +40,9 @@ alvoObs = Ponto(0, 0, 0)
 posicaoObs = Ponto(0, 0, 10)
 
 anguloRotacao = 5
-velMovimentacao = 1.25
+velMovimentacao = 0.15
+
+moving = False
 
 # **********************************************************************
 #  init()
@@ -135,7 +137,7 @@ def PosicUser():
     # glViewport(0, 0, 500, 500)
     #print ("AspectRatio", AspectRatio)
 
-    gluPerspective(60,AspectRatio,0.01,50) # Projecao perspectiva
+    gluPerspective(70,AspectRatio,0.01,50) # Projecao perspectiva
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
     gluLookAt(
@@ -235,6 +237,9 @@ def display():
 
     Angulo = Angulo + 1
 
+    if moving:
+        moveFrente()
+
     glutSwapBuffers()
 
 
@@ -271,7 +276,7 @@ def animate():
 # **********************************************************************
 ESCAPE = b'\x1b'
 def keyboard(*args):
-    global image, alvoObs
+    global image, alvoObs, moving
     vetorAlvo = Ponto.__add__(alvoObs, Ponto.__mul__(posicaoObs, -1))
     #print (args)
     # If escape is pressed, kill everything.
@@ -280,6 +285,7 @@ def keyboard(*args):
         os._exit(0)         # a tecla ESC for pressionada
 
     if args[0] == b' ':
+        moving = not moving
         init()
 
     if args[0] == b'i':
@@ -296,6 +302,7 @@ def keyboard(*args):
 
     if args[0] == b's':
         moveTras()
+
 
     # ForÃ§a o redesenho da tela
     glutPostRedisplay()
