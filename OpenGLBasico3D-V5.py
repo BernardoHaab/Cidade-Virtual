@@ -36,19 +36,30 @@ from Ponto import Ponto
 
 Angulo = 0.0
 
-alvoObs = Ponto(0, 0, 0)
-posicaoObs = Ponto(0, 0, 10)
+alvoObs = Ponto(0, 0, 9)
+posicaoObs = Ponto(0, 5, 10)
+
+posCarro = Ponto(29, 0, 1)
+dirCarro = Ponto(0, 0, 1)
 
 anguloRotacao = 5
-velMovimentacao = 0.15
+anguloSomatorio = 0
+velCarro = 0.1
 
 moving = False
+
+mapa = []
+tamMapaZ = 0
+tamMapaX = 0
+
+primeiraPessoa = True
 
 # **********************************************************************
 #  init()
 #  Inicializa os parÃ¢metros globais de OpenGL
 #/ **********************************************************************
 def init():
+    global mapa
     # Define a cor do fundo da tela (BRANCO)
     glClearColor(0.5, 0.5, 0.5, 1.0)
 
@@ -58,11 +69,11 @@ def init():
     glEnable (GL_CULL_FACE )
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
+
     #image = Image.open("Tex.png")
     #print ("X:", image.size[0])
     #print ("Y:", image.size[1])
     #image.show()
-
 
 
 # **********************************************************************
@@ -137,6 +148,8 @@ def PosicUser():
     # glViewport(0, 0, 500, 500)
     #print ("AspectRatio", AspectRatio)
 
+    carregaPosicObs()
+
     gluPerspective(70,AspectRatio,0.01,50) # Projecao perspectiva
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
@@ -145,13 +158,54 @@ def PosicUser():
         alvoObs.x, alvoObs.y, alvoObs.z, # Posição do Alvo
         0,1.0,0)
 
+def carregaPosicObs():
+    global posicaoObs, alvoObs
+    if primeiraPessoa:
+        posicaoObs.x = posCarro.x
+        posicaoObs.y = posCarro.y + 10
+        posicaoObs.z = posCarro.z - 1
+
+        alvoObs.x = posCarro.x
+        alvoObs.y = posCarro.y
+        # Porque precisa desse -0.1?
+        alvoObs.z = posCarro.z - 0.1
+        # alvoObs = posicaoObs.__add__(dirCarro)
+    else:
+        posicaoObs.x = posCarro.x+5
+        posicaoObs.y = posCarro.y
+        posicaoObs.z = posCarro.z+5
+
+        alvoObs.x = posCarro.x
+        alvoObs.y = posCarro.y
+        # Porque precisa desse -0.1?
+        alvoObs.z = posCarro.z - 0.1
+
+def desenhaCarro():
+    glPushMatrix()
+    glTranslated(posCarro.x, posCarro.y, posCarro.z)
+    glTranslated(0, -0.5, 0)
+    glRotatef(anguloSomatorio, 0, 1, 0)
+    # glRotatef(180, 1, 0, 0)
+
+    glColor3f(00.576471,0.858824,0.439216)
+
+    # glutSolidSphere(0.5, 5, 5)
+    glutSolidCone(0.5, 1, 20, 20)
+
+    glPopMatrix()
+
 # **********************************************************************
 # void DesenhaLadrilho(int corBorda, int corDentro)
 # Desenha uma cÃ©lula do piso.
 # O ladrilho tem largula 1, centro no (0,0,0) e estÃ¡ sobre o plano XZ
 # **********************************************************************
-def DesenhaLadrilho():
-    glColor3f(0,0,1) # desenha QUAD preenchido
+def DesenhaLadrilho(texturaId):
+
+    if texturaId != 0:
+        glColor3f(0,0,1) # desenha QUAD preenchido
+    else:
+        glColor3f(255,0,0) # desenha QUAD preenchido
+
     glBegin ( GL_QUADS )
     glNormal3f(0,1,0)
     glVertex3f(-0.5,  0.0, -0.5)
@@ -172,14 +226,20 @@ def DesenhaLadrilho():
 # **********************************************************************
 def DesenhaPiso():
     glPushMatrix()
-    glTranslated(-20,-1,-10)
-    for x in range(-20, 20):
+
+    xTranslate = tamMapaX / 2
+    zTranslate = tamMapaZ / 2
+
+    glTranslated(0,-1,0)
+
+    for linhaZ in mapa:
         glPushMatrix()
-        for z in range(-20, 20):
-            DesenhaLadrilho()
+        for colX in linhaZ:
+            DesenhaLadrilho(colX)
             glTranslated(0, 0, 1)
         glPopMatrix()
         glTranslated(1, 0, 0)
+
     glPopMatrix()
 
 
@@ -221,12 +281,12 @@ def display():
     DesenhaCubo()
     glPopMatrix()
 
-    glColor3f(00.576471,0.858824,0.439216) # Amarelo
-    glPushMatrix()
-    glTranslatef(0, 0, 10)
-    glRotatef(-Angulo,0,1,0)
-    DesenhaCubo()
-    glPopMatrix()
+    # glColor3f(00.576471,0.858824,0.439216) # Amarelo
+    # glPushMatrix()
+    # glTranslatef(0, 0, 10)
+    # glRotatef(-Angulo,0,1,0)
+    # DesenhaCubo()
+    # glPopMatrix()
 
     glColor3f(0.309804,0.184314,0.184314) # Amarelo
     glPushMatrix()
@@ -236,6 +296,8 @@ def display():
     glPopMatrix()
 
     Angulo = Angulo + 1
+
+    desenhaCarro()
 
     if moving:
         moveFrente()
@@ -276,7 +338,7 @@ def animate():
 # **********************************************************************
 ESCAPE = b'\x1b'
 def keyboard(*args):
-    global image, alvoObs, moving
+    global image, alvoObs, moving, primeiraPessoa
     vetorAlvo = Ponto.__add__(alvoObs, Ponto.__mul__(posicaoObs, -1))
     #print (args)
     # If escape is pressed, kill everything.
@@ -303,6 +365,9 @@ def keyboard(*args):
     if args[0] == b's':
         moveTras()
 
+    if args[0] == b'p':
+        primeiraPessoa = not primeiraPessoa
+
 
     # ForÃ§a o redesenho da tela
     glutPostRedisplay()
@@ -313,10 +378,10 @@ def keyboard(*args):
 
 def arrow_keys(a_keys: int, x: int, y: int):
     if a_keys == GLUT_KEY_UP:         # Se pressionar UP
-        moveFrente()
+        giraCima()
         pass
     if a_keys == GLUT_KEY_DOWN:       # Se pressionar DOWN
-        moveTras()
+        giraBaixo()
         pass
     if a_keys == GLUT_KEY_LEFT:       # Se pressionar LEFT
         giraEsquerda()
@@ -327,31 +392,103 @@ def arrow_keys(a_keys: int, x: int, y: int):
 
     glutPostRedisplay()
 
+def isPosicaoValida(posicao: Ponto):
+
+    conversorZ = 30 / tamMapaZ
+    mapaZ = round(posicao.z / conversorZ)
+    conversorX = 30 / tamMapaX
+    mapaX = round(posicao.x / conversorX)
+
+    # estaDentroZ = mapaZ >= 0 and mapaZ <= tamMapaZ
+    # estaDentroX = mapaX >= 0 and mapaX <= tamMapaX
+    # estaDentro = estaDentroZ and estaDentroX
+    # return estaDentro and mapa[mapaX][mapaZ] != 0
+    try:
+        print("FOOOOI")
+        print("mapaX: ", mapaX)
+        print("mapaZ: ", mapaZ)
+        print(mapa[mapaX][mapaZ])
+        return mapaX >= 0 and mapaZ >= 0 and mapa[mapaX][mapaZ] != 0
+    except IndexError:
+        print("EROROOO")
+        return False
+
 def moveFrente():
-    global posicaoObs, alvoObs
-    vetorAlvo = Ponto.__add__(alvoObs, Ponto.__mul__(posicaoObs, -1))
-    vetorAlvo = Ponto.__mul__(Ponto.versor(vetorAlvo), velMovimentacao)
-    posicaoObs = Ponto.__add__(posicaoObs, vetorAlvo)
-    alvoObs = Ponto.__add__(alvoObs, vetorAlvo)
+    global posCarro
+
+    vetorAlvo = Ponto.__mul__(Ponto.versor(dirCarro), velCarro)
+    novaPosicao = Ponto.__add__(posCarro, vetorAlvo)
+
+    if (isPosicaoValida(novaPosicao)):
+        posCarro = novaPosicao
 
 
 def moveTras():
-    global posicaoObs, alvoObs
-    vetorAlvo = Ponto.__add__(alvoObs, Ponto.__mul__(posicaoObs, -1))
-    vetorAlvo = Ponto.__mul__(Ponto.__mul__(Ponto.versor(vetorAlvo), -1), velMovimentacao)
-    posicaoObs = Ponto.__add__(posicaoObs, vetorAlvo)
-    alvoObs = Ponto.__add__(alvoObs, vetorAlvo)
+    global posCarro
+
+    vetorAlvo = Ponto.__mul__(Ponto.__mul__(Ponto.versor(dirCarro), -1), velCarro)
+    novaPosicao = Ponto.__add__(posCarro, vetorAlvo)
+    novaPosicao.imprime("Nova Posição: ")
+
+    if (isPosicaoValida(novaPosicao)):
+        posCarro = novaPosicao
 
 def giraEsquerda():
-    global posicaoObs, alvoObs
-    vetorAlvo = Ponto.__add__(alvoObs, Ponto.__mul__(posicaoObs, -1))
-    alvoObs = Ponto.__add__(vetorAlvo.rotacionaY(anguloRotacao), posicaoObs)
+    global dirCarro, anguloSomatorio
+
+    dirCarro.imprime(" ANTES - Dir Carro: ")
+    anguloSomatorio = anguloSomatorio + anguloRotacao
+    dirCarro = dirCarro.rotacionaY(anguloRotacao)
+    dirCarro.imprime("DEPOIS - Dir Carro: ")
 
 def giraDireita():
+    global dirCarro, anguloSomatorio
+
+    dirCarro.imprime(" ANTES - Dir Carro: ")
+    anguloSomatorio = anguloSomatorio - anguloRotacao
+    dirCarro = dirCarro.rotacionaY(-anguloRotacao)
+    dirCarro.imprime("DEPOIS - Dir Carro: ")
+
+def giraCima():
     global posicaoObs, alvoObs
     vetorAlvo = Ponto.__add__(alvoObs, Ponto.__mul__(posicaoObs, -1))
-    alvoObs = Ponto.__add__(vetorAlvo.rotacionaY(anguloRotacao * -1), posicaoObs)
+    # mul = -1 if vetorAlvo.z > 0 else 1
+    mul = 1
+    print('mul: ', mul)
+    vetorRotacionado = vetorAlvo.rotacionaX(anguloRotacao*mul)
+    vetorAlvo.imprime("Vetor alvo: ")
+    vetorRotacionado.imprime("Vetor rotacionado: ")
 
+
+    alvoObs = Ponto.__add__(vetorRotacionado, posicaoObs)
+
+def giraBaixo():
+    global posicaoObs, alvoObs
+    vetorAlvo = Ponto.__add__(alvoObs, Ponto.__mul__(posicaoObs, -1))
+    # mul = 1 if vetorAlvo.z > 0 else -1
+    mul = -1
+    print('mul: ', mul)
+    vetorRotacionado = vetorAlvo.rotacionaX(anguloRotacao*mul)
+    vetorAlvo.imprime("Vetor alvo: ")
+    vetorRotacionado.imprime("Vetor rotacionado: ")
+
+    alvoObs = Ponto.__add__(vetorRotacionado, posicaoObs)
+
+def carregaMatrizMapa():
+    global mapa, tamMapaX, tamMapaZ
+    arquivoMapa = open("Mapa1.txt", "r")
+    sizes = arquivoMapa.readline().split(" ")
+
+    tamMapaX = int(sizes[0])
+    tamMapaZ = int(sizes[1])
+
+    linhas = arquivoMapa.read().splitlines()
+
+    for linha in linhas:
+        print(linha)
+        print('-----')
+        mapa.append([int(x) for x in linha.split("\t")])
+    print(mapa)
 
 def mouse(button: int, state: int, x: int, y: int):
     glutPostRedisplay()
@@ -362,6 +499,8 @@ def mouseMove(x: int, y: int):
 # ***********************************************************************************
 # Programa Principal
 # ***********************************************************************************
+
+carregaMatrizMapa()
 
 glutInit(sys.argv)
 glutInitDisplayMode(GLUT_RGBA|GLUT_DEPTH | GLUT_RGB)

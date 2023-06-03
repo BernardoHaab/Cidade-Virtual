@@ -57,9 +57,15 @@ class Ponto:
         anguloRad = angulo* 3.14159265359/180.0
         xr =  self.x*math.cos(anguloRad) + self.z*math.sin(anguloRad)
         zr = -self.x*math.sin(anguloRad) + self.z*math.cos(anguloRad)
-        # x = xr
-        # z = zr
+
         return Ponto (xr, self.y, zr)
+
+    def rotacionaX(self, angulo):
+        anguloRad = angulo* 3.14159265359/180.0;
+        yr =  self.y*math.cos(anguloRad) - self.z*math.sin(anguloRad);
+        zr =  -self.y*math.sin(anguloRad) + self.z*math.cos(anguloRad);
+
+        return Ponto (self.x, yr, zr)
 
 
 
