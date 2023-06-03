@@ -163,7 +163,8 @@ def carregaPosicObs():
     if primeiraPessoa:
         posicaoObs.x = posCarro.x
         posicaoObs.y = posCarro.y + 1
-        posicaoObs.z = posCarro.z - 1
+        posicaoObs.z = posCarro.z
+
 
         # alvoObs.x = posCarro.x
         # alvoObs.y = posCarro.y
