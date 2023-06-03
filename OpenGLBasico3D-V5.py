@@ -39,12 +39,12 @@ Angulo = 0.0
 alvoObs = Ponto(0, 0, 9)
 posicaoObs = Ponto(0, 5, 10)
 
-posCarro = Ponto(29, 0, 1)
+posCarro = Ponto(58, 0, 1)
 dirCarro = Ponto(0, 0, 1)
 
 anguloRotacao = 5
 anguloSomatorio = 0
-velCarro = 0.1
+velCarro = 0.25
 
 moving = False
 
@@ -162,18 +162,18 @@ def carregaPosicObs():
     global posicaoObs, alvoObs
     if primeiraPessoa:
         posicaoObs.x = posCarro.x
-        posicaoObs.y = posCarro.y + 10
+        posicaoObs.y = posCarro.y + 1
         posicaoObs.z = posCarro.z - 1
 
-        alvoObs.x = posCarro.x
-        alvoObs.y = posCarro.y
-        # Porque precisa desse -0.1?
-        alvoObs.z = posCarro.z - 0.1
-        # alvoObs = posicaoObs.__add__(dirCarro)
+        # alvoObs.x = posCarro.x
+        # alvoObs.y = posCarro.y
+        # # Porque precisa desse -0.1?
+        # alvoObs.z = posCarro.z - 0.1
+        alvoObs = posicaoObs.__add__(dirCarro)
     else:
-        posicaoObs.x = posCarro.x+5
-        posicaoObs.y = posCarro.y
-        posicaoObs.z = posCarro.z+5
+        posicaoObs.x = posCarro.x
+        posicaoObs.y = posCarro.y + 12
+        posicaoObs.z = posCarro.z
 
         alvoObs.x = posCarro.x
         alvoObs.y = posCarro.y
@@ -190,9 +190,66 @@ def desenhaCarro():
     glColor3f(00.576471,0.858824,0.439216)
 
     # glutSolidSphere(0.5, 5, 5)
-    glutSolidCone(0.5, 1, 20, 20)
+    # glutSolidCone(0.5, 1, 20, 20)
+
+    desenhaRec(0.5, 1)
+
+    glTranslatef(0.5-0.1, 1-0.2, 1+0.2)
+    glColor3f(0.309804,0.184314,0.184314)
+    desenhaRec(0.1, 0.2)
+
+    glTranslatef(-1+0.2, 0, 0)
+    glColor3f(0.309804,0.184314,0.184314)
+    desenhaRec(0.1, 0.2)
 
     glPopMatrix()
+
+# ToDo: Corrigi bugs no retangulo
+def desenhaRec(ladoA, ladoB):
+    glBegin ( GL_QUADS )
+    # Front Face
+    glNormal3f(0,0,1)
+    glVertex3f(ladoA,  0,ladoB)
+    glVertex3f(ladoA,  ladoB, ladoB)
+    glVertex3f(-ladoA,  ladoB, ladoB)
+    glVertex3f(-ladoA,  0,ladoB)
+
+    # Back Face
+    glNormal3f(0,0,1)
+    glVertex3f(ladoA,  0, -ladoB)
+    glVertex3f(ladoA,  ladoB, -ladoB)
+    glVertex3f(-ladoA,  ladoB, -ladoB)
+    glVertex3f(-ladoA,  0, -ladoB)
+
+    # Right Face
+    glNormal3f(-1,0,0)
+    glVertex3f(-ladoA,  0,ladoB)
+    glVertex3f(-ladoA,  ladoB, ladoB)
+    glVertex3f(-ladoA,  ladoB, -ladoB)
+    glVertex3f(-ladoA,  0, -ladoB)
+
+    # Left Face
+    glNormal3f(-1,0,0)
+    glVertex3f(ladoA,  0,ladoB)
+    glVertex3f(ladoA,  ladoB, ladoB)
+    glVertex3f(ladoA,  ladoB, -ladoB)
+    glVertex3f(ladoA,  0, -ladoB)
+
+    # Bottom Face
+    glNormal3f(0,-1,0)
+    glVertex3f(-ladoA,  0.0, -ladoB)
+    glVertex3f(-ladoA,  0.0, ladoB)
+    glVertex3f( ladoA,  0.0, ladoB)
+    glVertex3f( ladoA,  0.0, -ladoB)
+
+    # Top Face
+    glNormal3f(0,1,0)
+    glVertex3f(-ladoA,  ladoB, -ladoB)
+    glVertex3f(-ladoA,  ladoB,  ladoB)
+    glVertex3f( ladoA,  ladoB,  ladoB)
+    glVertex3f( ladoA,  ladoB, -ladoB)
+
+    glEnd()
 
 # **********************************************************************
 # void DesenhaLadrilho(int corBorda, int corDentro)
@@ -208,20 +265,20 @@ def DesenhaLadrilho(texturaId):
 
     glBegin ( GL_QUADS )
     glNormal3f(0,1,0)
-    glVertex3f(-0.5,  0.0, -0.5)
-    glVertex3f(-0.5,  0.0,  0.5)
-    glVertex3f( 0.5,  0.0,  0.5)
-    glVertex3f( 0.5,  0.0, -0.5)
+    glVertex3f(-1,  0.0, -1)
+    glVertex3f(-1,  0.0,  1)
+    glVertex3f( 1,  0.0,  1)
+    glVertex3f( 1,  0.0, -1)
     glEnd()
 
-    glColor3f(1,1,1) # desenha a borda da QUAD
-    glBegin ( GL_LINE_STRIP )
-    glNormal3f(0,1,0)
-    glVertex3f(-0.5,  0.0, -0.5)
-    glVertex3f(-0.5,  0.0,  0.5)
-    glVertex3f( 0.5,  0.0,  0.5)
-    glVertex3f( 0.5,  0.0, -0.5)
-    glEnd()
+    # glColor3f(1,1,1) # desenha a borda da QUAD
+    # glBegin ( GL_LINE_STRIP )
+    # glNormal3f(0,1,0)
+    # glVertex3f(-1,  0.0, -1)
+    # glVertex3f(-1,  0.0,  1)
+    # glVertex3f( 1,  0.0,  1)
+    # glVertex3f( 1,  0.0, -1)
+    # glEnd()
 
 # **********************************************************************
 def DesenhaPiso():
@@ -236,9 +293,9 @@ def DesenhaPiso():
         glPushMatrix()
         for colX in linhaZ:
             DesenhaLadrilho(colX)
-            glTranslated(0, 0, 1)
+            glTranslated(0, 0, 2)
         glPopMatrix()
-        glTranslated(1, 0, 0)
+        glTranslated(2, 0, 0)
 
     glPopMatrix()
 
@@ -394,9 +451,9 @@ def arrow_keys(a_keys: int, x: int, y: int):
 
 def isPosicaoValida(posicao: Ponto):
 
-    conversorZ = 30 / tamMapaZ
+    conversorZ = 60 / tamMapaZ
     mapaZ = round(posicao.z / conversorZ)
-    conversorX = 30 / tamMapaX
+    conversorX = 60 / tamMapaX
     mapaX = round(posicao.x / conversorX)
 
     # estaDentroZ = mapaZ >= 0 and mapaZ <= tamMapaZ
