@@ -27,9 +27,11 @@
 import math
 import time
 
+import numpy as np
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
+from PIL import Image
 
 from Linha import Linha
 from Ponto import Ponto
@@ -51,6 +53,7 @@ moving = False
 mapa = []
 tamMapaZ = 0
 tamMapaX = 0
+texturas = []
 
 primeiraPessoa = True
 
@@ -69,11 +72,86 @@ def init():
     glEnable (GL_CULL_FACE )
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
+    texturas.append(loadTexture("texturas/Piso.jpg"))
+    texturas.append(loadTexture("texturas/bricks.jpg"))
 
-    #image = Image.open("Tex.png")
-    #print ("X:", image.size[0])
-    #print ("Y:", image.size[1])
+    # image = Image.open("None.png")
+    # print ("X:", image.size[0])
+    # print ("Y:", image.size[1])
+    # # image.show()
+    # texturas.append(image)
+
+# **********************************************************************
+# LoadTexture
+# Retorna o id da textura lida
+# **********************************************************************
+def loadTexture(nome) -> int:
+    # carrega a imagem
+    image = Image.open(nome)
+    # print ("X:", image.size[0])
+    # print ("Y:", image.size[1])
+    # converte para o formato de OpenGL
+    img_data = np.array(list(image.getdata()), np.uint8)
+
+    # Habilita o uso de textura
+    glEnable ( GL_TEXTURE_2D )
+
+    #Cria um ID para texura
+    texture = glGenTextures(1)
+    errorCode =  glGetError()
+    if errorCode == GL_INVALID_OPERATION:
+        print ("Erro: glGenTextures chamada entre glBegin/glEnd.")
+        return -1
+
+    # Define a forma de armazenamento dos pixels na textura (1= alihamento por byte)
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+    # Define que tipo de textura ser usada
+    # GL_TEXTURE_2D ==> define que ser· usada uma textura 2D (bitmaps)
+    # e o nro dela
+    glBindTexture(GL_TEXTURE_2D, texture)
+
+    # texture wrapping params
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    # texture filtering params
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+    errorCode = glGetError()
+    if errorCode != GL_NO_ERROR:
+        print ("Houve algum erro na criacao da textura.")
+        return -1
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.size[0], image.size[1], 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
+    # neste ponto, "texture" tem o nro da textura que foi carregada
+    errorCode = glGetError()
+    if errorCode == GL_INVALID_OPERATION:
+        print ("Erro: glTexImage2D chamada entre glBegin/glEnd.")
+        return -1
+
+    if errorCode != GL_NO_ERROR:
+        print ("Houve algum erro na criacao da textura.")
+        return -1
     #image.show()
+    return texture
+
+# **********************************************************************
+#  Habilita o uso de textura 'NroDaTextura'
+#  Se 'NroDaTextura' <0, desabilita o uso de texturas
+#  Se 'NroDaTextura' for maior que a quantidade de texturas, gera
+#  mensagem de erro e desabilita o uso de texturas
+# **********************************************************************
+def useTexture (NroDaTextura: int):
+    global texturas
+    if (NroDaTextura>len(texturas)):
+        print ("Numero invalido da textura.")
+        glDisable (GL_TEXTURE_2D)
+        return
+    if (NroDaTextura < 0):
+        glDisable (GL_TEXTURE_2D)
+    else:
+        glEnable (GL_TEXTURE_2D)
+        glBindTexture(GL_TEXTURE_2D, texturas[NroDaTextura])
 
 
 # **********************************************************************
@@ -137,8 +215,48 @@ def DefineLuz():
 # Desenha o cenario
 #
 # **********************************************************************
-def DesenhaCubo():
-    glutSolidCube(1)
+# def DesenhaCubo():
+#     glutSolidCube(1)
+def DesenhaCubo(tamAresta):
+    glBegin ( GL_QUADS )
+    # // Front Face
+    glNormal3f(0,0,1)
+    glVertex3f(-tamAresta/2, -tamAresta/2,  tamAresta/2)
+    glVertex3f( tamAresta/2, -tamAresta/2,  tamAresta/2)
+    glVertex3f( tamAresta/2,  tamAresta/2,  tamAresta/2)
+    glVertex3f(-tamAresta/2,  tamAresta/2,  tamAresta/2)
+    # // Back Face
+    glNormal3f(0,0,-1)
+    glVertex3f(-tamAresta/2, -tamAresta/2, -tamAresta/2)
+    glVertex3f(-tamAresta/2,  tamAresta/2, -tamAresta/2)
+    glVertex3f( tamAresta/2,  tamAresta/2, -tamAresta/2)
+    glVertex3f( tamAresta/2, -tamAresta/2, -tamAresta/2)
+    # // Top Face
+    glNormal3f(0,1,0)
+    glVertex3f(-tamAresta/2,  tamAresta/2, -tamAresta/2)
+    glVertex3f(-tamAresta/2,  tamAresta/2,  tamAresta/2)
+    glVertex3f( tamAresta/2,  tamAresta/2,  tamAresta/2)
+    glVertex3f( tamAresta/2,  tamAresta/2, -tamAresta/2)
+    # // Bottom Face
+    glNormal3f(0,-1,0)
+    glVertex3f(-tamAresta/2, -tamAresta/2, -tamAresta/2)
+    glVertex3f( tamAresta/2, -tamAresta/2, -tamAresta/2)
+    glVertex3f( tamAresta/2, -tamAresta/2,  tamAresta/2)
+    glVertex3f(-tamAresta/2, -tamAresta/2,  tamAresta/2)
+    # // Right face
+    glNormal3f(1,0,0)
+    glVertex3f( tamAresta/2, -tamAresta/2, -tamAresta/2)
+    glVertex3f( tamAresta/2,  tamAresta/2, -tamAresta/2)
+    glVertex3f( tamAresta/2,  tamAresta/2,  tamAresta/2)
+    glVertex3f( tamAresta/2, -tamAresta/2,  tamAresta/2)
+    # // Left Face
+    glNormal3f(-1,0,0)
+    glVertex3f(-tamAresta/2, -tamAresta/2, -tamAresta/2)
+    glVertex3f(-tamAresta/2, -tamAresta/2,  tamAresta/2)
+    glVertex3f(-tamAresta/2,  tamAresta/2,  tamAresta/2)
+    glVertex3f(-tamAresta/2,  tamAresta/2, -tamAresta/2)
+    glEnd()
+
 
 def PosicUser():
 
@@ -184,7 +302,7 @@ def carregaPosicObs():
 def desenhaCarro():
     glPushMatrix()
     glTranslated(posCarro.x, posCarro.y, posCarro.z)
-    glTranslated(0, -0.5, 0)
+    # glTranslated(0, -0.5, 0)
     glRotatef(anguloSomatorio, 0, 1, 0)
     # glRotatef(180, 1, 0, 0)
 
@@ -193,64 +311,31 @@ def desenhaCarro():
     # glutSolidSphere(0.5, 5, 5)
     # glutSolidCone(0.5, 1, 20, 20)
 
-    desenhaRec(0.5, 1)
+    desenhaRec(1, 1, 2)
 
-    glTranslatef(0.5-0.1, 1-0.2, 1+0.2)
+    glTranslatef(0.4, 0.4, 1.1)
     glColor3f(0.309804,0.184314,0.184314)
-    desenhaRec(0.1, 0.2)
+    desenhaRec(0.1, 0.2, 0.2)
 
-    glTranslatef(-1+0.2, 0, 0)
+
+    glTranslatef(-0.8, 0, 0)
     glColor3f(0.309804,0.184314,0.184314)
-    desenhaRec(0.1, 0.2)
+    desenhaRec(0.1, 0.2, 0.2)
+
+    # glTranslatef(-1+0.2, 0, 0)
+    # glColor3f(0.309804,0.184314,0.184314)
+    # desenhaRec(0.1, 0.2, 0.2)
 
     glPopMatrix()
 
 # ToDo: Corrigi bugs no retangulo
-def desenhaRec(ladoA, ladoB):
-    glBegin ( GL_QUADS )
-    # Front Face
-    glNormal3f(0,0,1)
-    glVertex3f(ladoA,  0,ladoB)
-    glVertex3f(ladoA,  ladoB, ladoB)
-    glVertex3f(-ladoA,  ladoB, ladoB)
-    glVertex3f(-ladoA,  0,ladoB)
+def desenhaRec(x, y, z):
+    glPushMatrix()
 
-    # Back Face
-    glNormal3f(0,0,1)
-    glVertex3f(ladoA,  0, -ladoB)
-    glVertex3f(ladoA,  ladoB, -ladoB)
-    glVertex3f(-ladoA,  ladoB, -ladoB)
-    glVertex3f(-ladoA,  0, -ladoB)
+    glScaled(x, y, z)
+    DesenhaCubo(1)
 
-    # Right Face
-    glNormal3f(-1,0,0)
-    glVertex3f(-ladoA,  0,ladoB)
-    glVertex3f(-ladoA,  ladoB, ladoB)
-    glVertex3f(-ladoA,  ladoB, -ladoB)
-    glVertex3f(-ladoA,  0, -ladoB)
-
-    # Left Face
-    glNormal3f(-1,0,0)
-    glVertex3f(ladoA,  0,ladoB)
-    glVertex3f(ladoA,  ladoB, ladoB)
-    glVertex3f(ladoA,  ladoB, -ladoB)
-    glVertex3f(ladoA,  0, -ladoB)
-
-    # Bottom Face
-    glNormal3f(0,-1,0)
-    glVertex3f(-ladoA,  0.0, -ladoB)
-    glVertex3f(-ladoA,  0.0, ladoB)
-    glVertex3f( ladoA,  0.0, ladoB)
-    glVertex3f( ladoA,  0.0, -ladoB)
-
-    # Top Face
-    glNormal3f(0,1,0)
-    glVertex3f(-ladoA,  ladoB, -ladoB)
-    glVertex3f(-ladoA,  ladoB,  ladoB)
-    glVertex3f( ladoA,  ladoB,  ladoB)
-    glVertex3f( ladoA,  ladoB, -ladoB)
-
-    glEnd()
+    glPopMatrix()
 
 # **********************************************************************
 # void DesenhaLadrilho(int corBorda, int corDentro)
@@ -261,14 +346,22 @@ def DesenhaLadrilho(texturaId):
 
     if texturaId != 0:
         glColor3f(0,0,1) # desenha QUAD preenchido
+        texturaId = 1
     else:
+        texturaId = 0
         glColor3f(255,0,0) # desenha QUAD preenchido
 
+    useTexture(texturaId)
+    glColor3f(1,1,1)
     glBegin ( GL_QUADS )
     glNormal3f(0,1,0)
+    glTexCoord(0,0)
     glVertex3f(-1,  0.0, -1)
+    glTexCoord(0,1)
     glVertex3f(-1,  0.0,  1)
+    glTexCoord(1,1)
     glVertex3f( 1,  0.0,  1)
+    glTexCoord(1,0)
     glVertex3f( 1,  0.0, -1)
     glEnd()
 
@@ -322,35 +415,35 @@ def display():
     glPushMatrix()
     glTranslatef(5, 0, 3)
     glRotatef(Angulo,0,1,0)
-    DesenhaCubo()
+    DesenhaCubo(1)
     glPopMatrix()
 
     glColor3f(0.6156862745, 0.8980392157, 0.9803921569) # Amarelo
     glPushMatrix()
     glTranslatef(-4, 0, 2)
     glRotatef(-Angulo,0,1,0)
-    DesenhaCubo()
+    DesenhaCubo(1)
     glPopMatrix()
 
     glColor3f(0.439216,0.858824,0.576471) # Amarelo
     glPushMatrix()
     glTranslatef(-10, 0, 10)
     glRotatef(-Angulo,0,1,0)
-    DesenhaCubo()
+    DesenhaCubo(1)
     glPopMatrix()
 
     # glColor3f(00.576471,0.858824,0.439216) # Amarelo
     # glPushMatrix()
     # glTranslatef(0, 0, 10)
     # glRotatef(-Angulo,0,1,0)
-    # DesenhaCubo()
+    # DesenhaCubo(1)
     # glPopMatrix()
 
     glColor3f(0.309804,0.184314,0.184314) # Amarelo
     glPushMatrix()
     glTranslatef(10, 0, 10)
     glRotatef(-Angulo,0,1,0)
-    DesenhaCubo()
+    DesenhaCubo(1)
     glPopMatrix()
 
     Angulo = Angulo + 1
