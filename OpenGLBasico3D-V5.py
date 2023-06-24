@@ -41,8 +41,8 @@ Angulo = 0.0
 alvoObs = Ponto(0, 0, 9)
 posicaoObs = Ponto(0, 5, 10)
 
-posCarro = Ponto(58, 0, 1)
-dirCarro = Ponto(0, 0, 1)
+posCarro = Ponto(58, 0, 0)
+dirCarro = Ponto(0, 0, -1)
 
 anguloRotacao = 5
 anguloSomatorio = 0
@@ -72,14 +72,18 @@ def init():
     glEnable (GL_CULL_FACE )
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
-    texturas.append(loadTexture("texturas/Piso.jpg"))
-    texturas.append(loadTexture("texturas/bricks.jpg"))
-
-    # image = Image.open("None.png")
-    # print ("X:", image.size[0])
-    # print ("Y:", image.size[1])
-    # # image.show()
-    # texturas.append(image)
+    texturas.append(loadTexture("texturas/CROSS.jpg"))
+    texturas.append(loadTexture("texturas/DL.jpg"))
+    texturas.append(loadTexture("texturas/DLR.jpg"))
+    texturas.append(loadTexture("texturas/DR.jpg"))
+    texturas.append(loadTexture("texturas/LR.jpg"))
+    texturas.append(loadTexture("texturas/None.jpg"))
+    texturas.append(loadTexture("texturas/UD.jpg"))
+    texturas.append(loadTexture("texturas/UDL.jpg"))
+    texturas.append(loadTexture("texturas/UDR.jpg"))
+    texturas.append(loadTexture("texturas/UL.jpg"))
+    texturas.append(loadTexture("texturas/ULR.jpg"))
+    texturas.append(loadTexture("texturas/UR.jpg"))
 
 # **********************************************************************
 # LoadTexture
@@ -302,9 +306,8 @@ def carregaPosicObs():
 def desenhaCarro():
     glPushMatrix()
     glTranslated(posCarro.x, posCarro.y, posCarro.z)
-    # glTranslated(0, -0.5, 0)
     glRotatef(anguloSomatorio, 0, 1, 0)
-    # glRotatef(180, 1, 0, 0)
+    glRotatef(180, 0, 1, 0)
 
     glColor3f(00.576471,0.858824,0.439216)
 
@@ -345,13 +348,15 @@ def desenhaRec(x, y, z):
 def DesenhaLadrilho(texturaId):
 
     if texturaId != 0:
+        # print("Textura: ", texturaId)
         glColor3f(0,0,1) # desenha QUAD preenchido
-        texturaId = 1
+        # texturaId = 1
     else:
+        # useTexture(-1)
         texturaId = 0
         glColor3f(255,0,0) # desenha QUAD preenchido
-
     useTexture(texturaId)
+
     glColor3f(1,1,1)
     glBegin ( GL_QUADS )
     glNormal3f(0,1,0)
@@ -375,6 +380,7 @@ def DesenhaLadrilho(texturaId):
     # glEnd()
 
 # **********************************************************************
+first = True
 def DesenhaPiso():
     glPushMatrix()
 
@@ -382,15 +388,22 @@ def DesenhaPiso():
     zTranslate = tamMapaZ / 2
 
     glTranslated(0,-1,0)
-
-    for linhaZ in mapa:
+    global first
+    for linhaZ in reversed(mapa):
         glPushMatrix()
         for colX in linhaZ:
-            DesenhaLadrilho(colX)
-            glTranslated(0, 0, 2)
+            # if first:
+            #     print(colX)
+            DesenhaLadrilho(colX-1)
+            # DesenhaLadrilho(6)
+            glTranslated(2, 0, 0)
         glPopMatrix()
-        glTranslated(2, 0, 0)
+        glTranslated(0, 0, -2)
 
+        # if first:
+        #     print('\n')
+
+    first = False
     glPopMatrix()
 
 
@@ -544,22 +557,16 @@ def arrow_keys(a_keys: int, x: int, y: int):
     glutPostRedisplay()
 
 def isPosicaoValida(posicao: Ponto):
-
     conversorZ = 60 / tamMapaZ
-    mapaZ = round(posicao.z / conversorZ)
+    mapaZ =  round(posicao.z / conversorZ)
     conversorX = 60 / tamMapaX
     mapaX = round(posicao.x / conversorX)
 
-    # estaDentroZ = mapaZ >= 0 and mapaZ <= tamMapaZ
-    # estaDentroX = mapaX >= 0 and mapaX <= tamMapaX
-    # estaDentro = estaDentroZ and estaDentroX
-    # return estaDentro and mapa[mapaX][mapaZ] != 0
     try:
         print("FOOOOI")
         print("mapaX: ", mapaX)
         print("mapaZ: ", mapaZ)
-        print(mapa[mapaX][mapaZ])
-        return mapaX >= 0 and mapaZ >= 0 and mapa[mapaX][mapaZ] != 0
+        return mapaX >= 0 and mapaZ <= 0 and mapa[tamMapaZ - abs(mapaZ) -1][mapaX] != 0
     except IndexError:
         print("EROROOO")
         return False
@@ -569,6 +576,8 @@ def moveFrente():
 
     vetorAlvo = Ponto.__mul__(Ponto.versor(dirCarro), velCarro)
     novaPosicao = Ponto.__add__(posCarro, vetorAlvo)
+
+    novaPosicao.imprime("Posicao: ")
 
     if (isPosicaoValida(novaPosicao)):
         posCarro = novaPosicao
@@ -639,6 +648,10 @@ def carregaMatrizMapa():
         print(linha)
         print('-----')
         mapa.append([int(x) for x in linha.split("\t")])
+
+    # for i in range(mapa) :
+    #     mapa[i] = reversed(mapa[i])
+
     print(mapa)
 
 def mouse(button: int, state: int, x: int, y: int):
