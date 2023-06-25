@@ -26,6 +26,7 @@
 #from PIL import Image
 import math
 import time
+from random import randrange
 
 import numpy as np
 from OpenGL.GL import *
@@ -41,8 +42,8 @@ Angulo = 0.0
 alvoObs = Ponto(0, 0, 9)
 posicaoObs = Ponto(0, 5, 10)
 
-posCarro = Ponto(58, 0, 0)
-dirCarro = Ponto(0, 0, -1)
+posCarro = Ponto(0, 0, 0)
+dirCarro = Ponto(0, 0, 1)
 
 anguloRotacao = 5
 anguloSomatorio = 0
@@ -54,6 +55,10 @@ mapa = []
 tamMapaZ = 0
 tamMapaX = 0
 texturas = []
+
+pontoGas = Ponto(0,0,0)
+mapaGas = (0,0)
+gasTotal = 100
 
 primeiraPessoa = True
 
@@ -84,6 +89,33 @@ def init():
     texturas.append(loadTexture("texturas/UL.jpg"))
     texturas.append(loadTexture("texturas/ULR.jpg"))
     texturas.append(loadTexture("texturas/UR.jpg"))
+
+    carregaGasolina()
+
+def carregaGasolina():
+    global pontoGas, mapaGas
+    conversorZ = 60 / tamMapaZ
+    conversorX = 60 / tamMapaX
+
+    novoX = randrange(0, 30)
+    novoZ = randrange(0, 30)
+
+    while mapa[novoZ][novoX] <= 0 or mapa[novoZ][novoX] > 13:
+        novoX = randrange(0, 30)
+        novoZ = randrange(0, 30)
+
+    print("novoX:", novoX)
+    print("novoX*conversorX:", novoX*conversorX)
+    print("novoZ:", novoZ)
+    print("Linha: ", tamMapaZ - novoZ-1)
+    print("Coluna: ", tamMapaX - novoX-1)
+    print("novoZ*conversorZ:", novoZ*conversorZ)
+    print("Ponto Mapa:", mapa[novoZ][novoX])
+
+    mapaGas = (tamMapaX - novoX - 1, tamMapaZ - novoZ - 1)
+    pontoGas = Ponto(mapaGas[0]*conversorX, 0, mapaGas[1]*conversorZ )
+    pontoGas.imprime('Posic Gas')
+
 
 # **********************************************************************
 # LoadTexture
@@ -347,26 +379,20 @@ def desenhaRec(x, y, z):
 # **********************************************************************
 def DesenhaLadrilho(texturaId):
 
-    if texturaId != 0:
-        # print("Textura: ", texturaId)
-        glColor3f(0,0,1) # desenha QUAD preenchido
-        # texturaId = 1
-    else:
-        # useTexture(-1)
-        texturaId = 0
-        glColor3f(255,0,0) # desenha QUAD preenchido
+    if texturaId < 0 or texturaId > 12:
+        texturaId = 5
     useTexture(texturaId)
 
     glColor3f(1,1,1)
     glBegin ( GL_QUADS )
     glNormal3f(0,1,0)
-    glTexCoord(0,0)
-    glVertex3f(-1,  0.0, -1)
-    glTexCoord(0,1)
-    glVertex3f(-1,  0.0,  1)
     glTexCoord(1,1)
-    glVertex3f( 1,  0.0,  1)
+    glVertex3f(-1,  0.0, -1)
     glTexCoord(1,0)
+    glVertex3f(-1,  0.0,  1)
+    glTexCoord(0,0)
+    glVertex3f( 1,  0.0,  1)
+    glTexCoord(0,1)
     glVertex3f( 1,  0.0, -1)
     glEnd()
 
@@ -379,26 +405,31 @@ def DesenhaLadrilho(texturaId):
     # glVertex3f( 1,  0.0, -1)
     # glEnd()
 
+def desenhaPredio(altura):
+    glColor3f(0.5,0.0,0.0) # Vermelho
+    desenhaRec(2,altura,2)
+
 # **********************************************************************
 first = True
 def DesenhaPiso():
+    global first
     glPushMatrix()
 
-    xTranslate = tamMapaX / 2
-    zTranslate = tamMapaZ / 2
-
     glTranslated(0,-1,0)
-    global first
     for linhaZ in reversed(mapa):
         glPushMatrix()
-        for colX in linhaZ:
+        for colX in reversed(linhaZ):
             # if first:
-            #     print(colX)
+            #     print(colX, end=' ')
             DesenhaLadrilho(colX-1)
             # DesenhaLadrilho(6)
+
+            if colX > 14:
+                desenhaPredio(colX)
+
             glTranslated(2, 0, 0)
         glPopMatrix()
-        glTranslated(0, 0, -2)
+        glTranslated(0, 0, 2)
 
         # if first:
         #     print('\n')
@@ -459,6 +490,12 @@ def display():
     DesenhaCubo(1)
     glPopMatrix()
 
+    # glColor3f(0.309804,0.184314,0.184314) # Amarelo
+    glPushMatrix()
+    glTranslatef(pontoGas.x, pontoGas.y, pontoGas.z)
+    DesenhaCubo(1)
+    glPopMatrix()
+
     Angulo = Angulo + 1
 
     desenhaCarro()
@@ -512,7 +549,7 @@ def keyboard(*args):
 
     if args[0] == b' ':
         moving = not moving
-        init()
+        # init()
 
     if args[0] == b'i':
         image.show()
@@ -557,6 +594,7 @@ def arrow_keys(a_keys: int, x: int, y: int):
     glutPostRedisplay()
 
 def isPosicaoValida(posicao: Ponto):
+    global gasTotal
     conversorZ = 60 / tamMapaZ
     mapaZ =  round(posicao.z / conversorZ)
     conversorX = 60 / tamMapaX
@@ -564,23 +602,37 @@ def isPosicaoValida(posicao: Ponto):
 
     try:
         print("FOOOOI")
-        print("mapaX: ", mapaX)
+        print("mapaX : ", mapaX)
         print("mapaZ: ", mapaZ)
-        return mapaX >= 0 and mapaZ <= 0 and mapa[tamMapaZ - abs(mapaZ) -1][mapaX] != 0
+        print("Matriz: ", mapa[tamMapaZ - abs(mapaZ) -1][tamMapaX - abs(mapaX) -1])
+        print("mapaGas: ", mapaGas)
+        print("\n")
+        print("Linha: ", tamMapaZ - abs(mapaZ) -1)
+        print("Coluna : ", tamMapaX - abs(mapaX) -1)
+        if (mapaX == mapaGas[0] and mapaZ == mapaGas[1]):
+            gasTotal = 100
+            carregaGasolina()
+        # return True
+        return mapaX >= 0 and mapaX < 30 and mapaZ >= 0 and mapaZ < 30 and mapa[tamMapaZ - abs(mapaZ) -1][tamMapaX - abs(mapaX) -1] != 0
     except IndexError:
         print("EROROOO")
         return False
 
 def moveFrente():
-    global posCarro
+    global posCarro, gasTotal
 
     vetorAlvo = Ponto.__mul__(Ponto.versor(dirCarro), velCarro)
     novaPosicao = Ponto.__add__(posCarro, vetorAlvo)
 
     novaPosicao.imprime("Posicao: ")
 
+    if gasTotal <= 0:
+        print("ACABOU!")
+        return
+
     if (isPosicaoValida(novaPosicao)):
         posCarro = novaPosicao
+        gasTotal -= 0.2
 
 
 def moveTras():
@@ -596,18 +648,18 @@ def moveTras():
 def giraEsquerda():
     global dirCarro, anguloSomatorio
 
-    dirCarro.imprime(" ANTES - Dir Carro: ")
+    # dirCarro.imprime(" ANTES - Dir Carro: ")
     anguloSomatorio = anguloSomatorio + anguloRotacao
     dirCarro = dirCarro.rotacionaY(anguloRotacao)
-    dirCarro.imprime("DEPOIS - Dir Carro: ")
+    # dirCarro.imprime("DEPOIS - Dir Carro: ")
 
 def giraDireita():
     global dirCarro, anguloSomatorio
 
-    dirCarro.imprime(" ANTES - Dir Carro: ")
+    # dirCarro.imprime(" ANTES - Dir Carro: ")
     anguloSomatorio = anguloSomatorio - anguloRotacao
     dirCarro = dirCarro.rotacionaY(-anguloRotacao)
-    dirCarro.imprime("DEPOIS - Dir Carro: ")
+    # dirCarro.imprime("DEPOIS - Dir Carro: ")
 
 def giraCima():
     global posicaoObs, alvoObs
@@ -641,6 +693,8 @@ def carregaMatrizMapa():
 
     tamMapaX = int(sizes[0])
     tamMapaZ = int(sizes[1])
+
+    print("tamMapaX: ", tamMapaX)
 
     linhas = arquivoMapa.read().splitlines()
 
