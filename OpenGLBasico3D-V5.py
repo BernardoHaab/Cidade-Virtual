@@ -33,6 +33,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 from PIL import Image
+from OpenGL.GLUT import GLUT_BITMAP_TIMES_ROMAN_24
 
 from Linha import Linha
 from Ponto import Ponto
@@ -502,6 +503,46 @@ def display():
 
     if moving:
         moveFrente()
+
+
+    # Definir a projeção para 2D
+    glMatrixMode(GL_PROJECTION)
+    glPushMatrix()
+    glLoadIdentity()
+    gluOrtho2D(-1, 1, -1, 1)  # Define uma projeção ortográfica 2D
+    
+    # Definir a visualização para o indicador de gasolina
+    glMatrixMode(GL_MODELVIEW)
+    glPushMatrix()
+    glLoadIdentity()
+    
+    # Aqui você pode posicionar e desenhar o indicador de gasolina usando primitivas gráficas 2D
+     # Restaura a posição inicial do texto
+    text_x = 0.65
+    text_y = 0.8
+
+    glColor3f(0.0, 0.0, 0.0)  # Define a cor do texto como branco
+    for char in f"Gasolina: {gasTotal:.0f}%":
+        glRasterPos2f(text_x, text_y)
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ord(char))
+        text_x += glutBitmapWidth(GLUT_BITMAP_TIMES_ROMAN_24, ord(char)) / 750.0
+
+    glColor3f(1.0, 1.0, 1.0)  # Define a cor para branco
+
+    glBegin(GL_QUADS)
+    glVertex2f(0.9, 0.9)  # Canto inferior esquerdo
+    glVertex2f(0.6, 0.9)  # Canto inferior direito
+    glVertex2f(0.6, 0.7)  # Canto superior direito
+    glVertex2f(0.9, 0.7)  # Canto superior esquerdo
+    glEnd()
+     
+
+    glPopMatrix()
+    
+    # Restaurar a projeção e visualização 3D
+    glMatrixMode(GL_PROJECTION)
+    glPopMatrix()
+    glMatrixMode(GL_MODELVIEW)
 
     glutSwapBuffers()
 
