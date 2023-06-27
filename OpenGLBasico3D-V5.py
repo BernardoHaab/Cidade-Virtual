@@ -123,11 +123,7 @@ def carregaGasolina():
 # Retorna o id da textura lida
 # **********************************************************************
 def loadTexture(nome) -> int:
-    # carrega a imagem
     image = Image.open(nome)
-    # print ("X:", image.size[0])
-    # print ("Y:", image.size[1])
-    # converte para o formato de OpenGL
     img_data = np.array(list(image.getdata()), np.uint8)
 
     # Habilita o uso de textura
@@ -143,8 +139,6 @@ def loadTexture(nome) -> int:
     # Define a forma de armazenamento dos pixels na textura (1= alihamento por byte)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
     # Define que tipo de textura ser usada
-    # GL_TEXTURE_2D ==> define que ser· usada uma textura 2D (bitmaps)
-    # e o nro dela
     glBindTexture(GL_TEXTURE_2D, texture)
 
     # texture wrapping params
@@ -160,7 +154,6 @@ def loadTexture(nome) -> int:
         return -1
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.size[0], image.size[1], 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
-    # neste ponto, "texture" tem o nro da textura que foi carregada
     errorCode = glGetError()
     if errorCode == GL_INVALID_OPERATION:
         print ("Erro: glTexImage2D chamada entre glBegin/glEnd.")
@@ -456,26 +449,26 @@ def display():
 
 
     DesenhaPiso()
-    glColor3f(0.5,0.0,0.0) # Vermelho
-    glPushMatrix()
-    glTranslatef(5, 0, 3)
-    glRotatef(Angulo,0,1,0)
-    DesenhaCubo(1)
-    glPopMatrix()
+    # glColor3f(0.5,0.0,0.0) # Vermelho
+    # glPushMatrix()
+    # glTranslatef(5, 0, 3)
+    # glRotatef(Angulo,0,1,0)
+    # DesenhaCubo(1)
+    # glPopMatrix()
 
-    glColor3f(0.6156862745, 0.8980392157, 0.9803921569) # Amarelo
-    glPushMatrix()
-    glTranslatef(-4, 0, 2)
-    glRotatef(-Angulo,0,1,0)
-    DesenhaCubo(1)
-    glPopMatrix()
+    # glColor3f(0.6156862745, 0.8980392157, 0.9803921569) # Amarelo
+    # glPushMatrix()
+    # glTranslatef(-4, 0, 2)
+    # glRotatef(-Angulo,0,1,0)
+    # DesenhaCubo(1)
+    # glPopMatrix()
 
-    glColor3f(0.439216,0.858824,0.576471) # Amarelo
-    glPushMatrix()
-    glTranslatef(-10, 0, 10)
-    glRotatef(-Angulo,0,1,0)
-    DesenhaCubo(1)
-    glPopMatrix()
+    # glColor3f(0.439216,0.858824,0.576471) # Amarelo
+    # glPushMatrix()
+    # glTranslatef(-10, 0, 10)
+    # glRotatef(-Angulo,0,1,0)
+    # DesenhaCubo(1)
+    # glPopMatrix()
 
     # glColor3f(00.576471,0.858824,0.439216) # Amarelo
     # glPushMatrix()
@@ -484,12 +477,12 @@ def display():
     # DesenhaCubo(1)
     # glPopMatrix()
 
-    glColor3f(0.309804,0.184314,0.184314) # Amarelo
-    glPushMatrix()
-    glTranslatef(10, 0, 10)
-    glRotatef(-Angulo,0,1,0)
-    DesenhaCubo(1)
-    glPopMatrix()
+    # glColor3f(0.309804,0.184314,0.184314) # Amarelo
+    # glPushMatrix()
+    # glTranslatef(10, 0, 10)
+    # glRotatef(-Angulo,0,1,0)
+    # DesenhaCubo(1)
+    # glPopMatrix()
 
     # glColor3f(0.309804,0.184314,0.184314) # Amarelo
     glPushMatrix()
@@ -504,36 +497,31 @@ def display():
     if moving:
         moveFrente()
 
-
-    # Definir a projeção para 2D
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
     glLoadIdentity()
-    gluOrtho2D(-1, 1, -1, 1)  # Define uma projeção ortográfica 2D
+    gluOrtho2D(-1, 1, -1, 1) 
     
-    # Definir a visualização para o indicador de gasolina
     glMatrixMode(GL_MODELVIEW)
     glPushMatrix()
     glLoadIdentity()
     
-    # Aqui você pode posicionar e desenhar o indicador de gasolina usando primitivas gráficas 2D
-     # Restaura a posição inicial do texto
+
     text_x = 0.65
     text_y = 0.8
 
-    glColor3f(0.0, 0.0, 0.0)  # Define a cor do texto como branco
+    glColor3f(0.0, 0.0, 0.0)  
     for char in f"Gasolina: {gasTotal:.0f}%":
         glRasterPos2f(text_x, text_y)
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ord(char))
         text_x += glutBitmapWidth(GLUT_BITMAP_TIMES_ROMAN_24, ord(char)) / 750.0
 
-    glColor3f(1.0, 1.0, 1.0)  # Define a cor para branco
-
+    glColor3f(1.0, 1.0, 1.0) 
     glBegin(GL_QUADS)
-    glVertex2f(0.9, 0.9)  # Canto inferior esquerdo
-    glVertex2f(0.6, 0.9)  # Canto inferior direito
-    glVertex2f(0.6, 0.7)  # Canto superior direito
-    glVertex2f(0.9, 0.7)  # Canto superior esquerdo
+    glVertex2f(0.9, 0.9)  
+    glVertex2f(0.6, 0.9)  
+    glVertex2f(0.6, 0.7)  
+    glVertex2f(0.9, 0.7) 
     glEnd()
      
 
@@ -609,7 +597,6 @@ def keyboard(*args):
 
     if args[0] == b'p':
         primeiraPessoa = not primeiraPessoa
-
 
     # ForÃ§a o redesenho da tela
     glutPostRedisplay()
